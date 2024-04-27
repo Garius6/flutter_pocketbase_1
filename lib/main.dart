@@ -1,9 +1,37 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_pocketbase_1/widgets/credentials.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pocketbase/pocketbase.dart';
 import 'package:provider/provider.dart';
+
+final GoRouter _router = GoRouter(
+    redirect: ((context, state) {
+      if (context.read<PocketBase>().authStore.isValid) {
+        return null;
+      } else {
+        return '/sign_in';
+      }
+    }),
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (context, state) {
+          return const Placeholder();
+        },
+      ),
+      GoRoute(
+        path: '/sign_in',
+        builder: (context, state) {
+          return const SignInPage();
+        },
+      ),
+      GoRoute(
+        path: '/sign_up',
+        builder: (context, state) {
+          return const SignUpPage();
+        },
+      )
+    ]);
 
 void main() {
   runApp(MultiProvider(
@@ -16,7 +44,9 @@ class PocketBaseApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(home: LoginPage());
+    return MaterialApp.router(
+      routerConfig: _router,
+    );
   }
 }
 
@@ -42,6 +72,10 @@ class _SignUpPageState extends State<SignUpPage> {
               .read<PocketBase>()
               .collection('users')
               .create(body: body);
+
+          if (context.mounted) {
+            context.go('/');
+          }
         },
         buttonChild: const Text('Sign up'),
       ),
@@ -49,23 +83,26 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 }
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class SignInPage extends StatefulWidget {
+  const SignInPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<SignInPage> createState() => _SignInPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Credentials(
         onSubmit: (login, password) async {
-          context
+          await context
               .read<PocketBase>()
               .collection('users')
               .authWithPassword(login, password);
+          if (context.mounted) {
+            context.go('/');
+          }
         },
         buttonChild: const Text("Login"),
       ),
