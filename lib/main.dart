@@ -6,7 +6,8 @@ import 'package:provider/provider.dart';
 
 final GoRouter _router = GoRouter(
     redirect: ((context, state) {
-      if (context.read<PocketBase>().authStore.isValid) {
+      if (context.read<PocketBase>().authStore.isValid ||
+          state.fullPath == '/sign_up') {
         return null;
       } else {
         return '/sign_in';
@@ -68,10 +69,10 @@ class _SignUpPageState extends State<SignUpPage> {
             "password": password,
             "passwordConfirm": password
           };
-          await context
-              .read<PocketBase>()
-              .collection('users')
-              .create(body: body);
+          final pb = context.read<PocketBase>();
+
+          await pb.collection('users').create(body: body);
+          await pb.collection('users').authWithPassword(login, password);
 
           if (context.mounted) {
             context.go('/');
@@ -94,17 +95,31 @@ class _SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Credentials(
-        onSubmit: (login, password) async {
-          await context
-              .read<PocketBase>()
-              .collection('users')
-              .authWithPassword(login, password);
-          if (context.mounted) {
-            context.go('/');
-          }
-        },
-        buttonChild: const Text("Login"),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Credentials(
+              onSubmit: (login, password) async {
+                await context
+                    .read<PocketBase>()
+                    .collection('users')
+                    .authWithPassword(login, password);
+                if (context.mounted) {
+                  context.go('/');
+                }
+              },
+              buttonChild: const Text("Login"),
+            ),
+            TextButton(
+                onPressed: () {
+                  print('pressed');
+                  context.go('/sign_up');
+                  print('after pressed');
+                },
+                child: const Text('Sign up'))
+          ],
+        ),
       ),
     );
   }
