@@ -14,11 +14,19 @@ final GoRouter _router = GoRouter(
       }
     }),
     routes: [
+      GoRoute(path: '/', redirect: (context, state) => "/tickets"),
       GoRoute(
-        path: '/',
+        path: '/tickets',
         builder: (context, state) {
-          return const Placeholder();
+          return const TicketsListPage();
         },
+        routes: [
+          GoRoute(
+            path: ':ticketId',
+            builder: (context, state) =>
+                TicketDetailPage(ticketId: state.pathParameters["ticketId"]!),
+          )
+        ],
       ),
       GoRoute(
         path: '/sign_in',
@@ -113,14 +121,112 @@ class _SignInPageState extends State<SignInPage> {
             ),
             TextButton(
                 onPressed: () {
-                  print('pressed');
                   context.go('/sign_up');
-                  print('after pressed');
                 },
                 child: const Text('Sign up'))
           ],
         ),
       ),
+    );
+  }
+}
+
+class TicketsListPage extends StatefulWidget {
+  const TicketsListPage({super.key});
+
+  @override
+  State<TicketsListPage> createState() => _TicketsListPageState();
+}
+
+class _TicketsListPageState extends State<TicketsListPage> {
+  var tickets = <RecordModel>[];
+
+  Future<List<RecordModel>> _getTickets(BuildContext context) async {
+    return context.read<PocketBase>().collection('tickets').getFullList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: FutureBuilder(
+        future: _getTickets(context),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            tickets = snapshot.data!;
+            return ListView.builder(
+              itemCount: tickets.length,
+              itemBuilder: (context, index) {
+                final currentTicket = tickets[index];
+                return ListTile(
+                  title: Text(currentTicket.data["title"]),
+                  onTap: () {
+                    context.go('/tickets/${currentTicket.id}');
+                  },
+                );
+              },
+            );
+          } else if (snapshot.hasError) {
+            return Text(snapshot.error.toString());
+          } else {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+        },
+      ),
+    );
+  }
+}
+
+class TicketDetailPage extends StatefulWidget {
+  const TicketDetailPage({required this.ticketId, super.key});
+
+  final String ticketId;
+
+  @override
+  State<TicketDetailPage> createState() => _TicketDetailPageState();
+}
+
+class _TicketDetailPageState extends State<TicketDetailPage> {
+  late Future<RecordModel> _futureTicket;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureTicket = _fetchTicket();
+  }
+
+  Future<RecordModel> _fetchTicket() async {
+    return await context
+        .read<PocketBase>()
+        .collection('tickets')
+        .getOne(widget.ticketId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: FutureBuilder(
+          future: _futureTicket,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              final currentTicket = snapshot.data!;
+              return Column(
+                children: [
+                  Text(currentTicket.id),
+                  Text(currentTicket.data["title"]),
+                  Text(currentTicket.data["content"])
+                ],
+              );
+            } else if (snapshot.hasError) {
+              return Center(
+                child: Text(snapshot.error.toString()),
+              );
+            } else {
+              return const CircularProgressIndicator();
+            }
+          }),
     );
   }
 }
