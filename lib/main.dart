@@ -1,4 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_pocketbase_1/src/features/tickets/pocketbase_data_source.dart';
+import 'package:flutter_pocketbase_1/src/features/tickets/view_model.dart';
+import 'package:flutter_pocketbase_1/src/features/tickets/ui/ticket_create_page.dart';
+import 'package:flutter_pocketbase_1/src/features/tickets/ui/ticket_detail_page.dart';
+import 'package:flutter_pocketbase_1/src/features/tickets/ui/ticket_edit_page.dart';
+import 'package:flutter_pocketbase_1/src/features/tickets/ui/ticket_list_page.dart';
 import 'package:flutter_pocketbase_1/widgets/credentials.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pocketbase/pocketbase.dart';
@@ -14,7 +21,7 @@ final GoRouter _router = GoRouter(
       }
     }),
     initialLocation: '/tickets',
-    debugLogDiagnostics: true,
+    debugLogDiagnostics: kDebugMode,
     routes: [
       GoRoute(path: '/', redirect: (context, state) => "/tickets"),
       GoRoute(
@@ -55,10 +62,19 @@ final GoRouter _router = GoRouter(
       )
     ]);
 
-void main() {
-  runApp(MultiProvider(
-      providers: [Provider(create: (_) => PocketBase("http://10.0.2.2:8090"))],
-      child: const PocketBaseApp()));
+void main() async {
+  runApp(MultiProvider(providers: [
+    Provider(create: (_) => PocketBase("http://10.0.2.2:8090")),
+    ChangeNotifierProxyProvider<PocketBase, TicketsViewModel>(
+      create: (context) {
+        return TicketsViewModel(
+            TicketsPocketbaseDataSource(pb: context.read<PocketBase>()));
+      },
+      update: (context, value, previous) {
+        return TicketsViewModel(TicketsPocketbaseDataSource(pb: value));
+      },
+    ),
+  ], child: const PocketBaseApp()));
 }
 
 class PocketBaseApp extends StatelessWidget {
@@ -140,263 +156,6 @@ class _SignInPageState extends State<SignInPage> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class TicketsListPage extends StatefulWidget {
-  const TicketsListPage({super.key});
-
-  @override
-  State<TicketsListPage> createState() => _TicketsListPageState();
-}
-
-class _TicketsListPageState extends State<TicketsListPage> {
-  var tickets = <RecordModel>[];
-
-  Future<List<RecordModel>> _getTickets(BuildContext context) async {
-    return context.read<PocketBase>().collection('tickets').getFullList();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _getTickets(context),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          tickets = snapshot.data!;
-          return Scaffold(
-            floatingActionButton: FloatingActionButton(
-              onPressed: () {
-                context.go('/tickets/create');
-              },
-              child: const Icon(Icons.add),
-            ),
-            body: ListView.builder(
-              itemCount: tickets.length,
-              itemBuilder: (context, index) {
-                final currentTicket = tickets[index];
-                return ListTile(
-                  title: Text(currentTicket.data["title"]),
-                  onTap: () {
-                    context.go('/tickets/${currentTicket.id}');
-                  },
-                );
-              },
-            ),
-          );
-        } else if (snapshot.hasError) {
-          return Text(snapshot.error.toString());
-        } else {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-      },
-    );
-  }
-}
-
-class TicketDetailPage extends StatefulWidget {
-  const TicketDetailPage({required this.ticketId, super.key});
-
-  final String ticketId;
-
-  @override
-  State<TicketDetailPage> createState() => _TicketDetailPageState();
-}
-
-class _TicketDetailPageState extends State<TicketDetailPage> {
-  late Future<RecordModel> _futureTicket;
-
-  @override
-  void initState() {
-    super.initState();
-    _futureTicket = _fetchTicket();
-  }
-
-  Future<RecordModel> _fetchTicket() async {
-    return await context
-        .read<PocketBase>()
-        .collection('tickets')
-        .getOne(widget.ticketId);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: _futureTicket,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            final currentTicket = snapshot.data!;
-            return Scaffold(
-                appBar: AppBar(
-                  actions: [
-                    IconButton(
-                        onPressed: () {
-                          context.go('/tickets/${currentTicket.id}/edit');
-                        },
-                        icon: const Icon(Icons.edit))
-                  ],
-                ),
-                body: Column(
-                  children: [
-                    Text(currentTicket.id),
-                    Text(currentTicket.data["title"]),
-                    Text(currentTicket.data["content"]),
-                  ],
-                ));
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text(snapshot.error.toString()),
-            );
-          } else {
-            return const CircularProgressIndicator();
-          }
-        });
-  }
-}
-
-class TicketCreatePage extends StatefulWidget {
-  const TicketCreatePage({super.key});
-
-  @override
-  State<TicketCreatePage> createState() => _TicketCreatePageState();
-}
-
-class _TicketCreatePageState extends State<TicketCreatePage> {
-  final _titleController = TextEditingController();
-  final _contentController = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Form(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextFormField(
-                controller: _titleController,
-              ),
-              TextFormField(
-                controller: _contentController,
-              ),
-              OutlinedButton(
-                  onPressed: () async {
-                    final Map<String, dynamic> body = {
-                      "title": _titleController.text,
-                      "content": _contentController.text
-                    };
-                    await context
-                        .read<PocketBase>()
-                        .collection('tickets')
-                        .create(body: body);
-
-                    if (context.mounted) {
-                      context.go('/tickets');
-                    }
-                  },
-                  child: const Text("Save")),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class TicketEditPage extends StatefulWidget {
-  const TicketEditPage({required this.ticketId, super.key});
-
-  final String ticketId;
-
-  @override
-  State<TicketEditPage> createState() => _TicketEditPageState();
-}
-
-class _TicketEditPageState extends State<TicketEditPage> {
-  final _titleController = TextEditingController();
-  final _contentController = TextEditingController();
-
-  late Future<RecordModel> _ticketFuture;
-
-  Future<RecordModel> _getTicket() {
-    return context
-        .read<PocketBase>()
-        .collection('tickets')
-        .getOne(widget.ticketId);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    _ticketFuture = _getTicket();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    _titleController.dispose();
-    _contentController.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _ticketFuture,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          final ticket = snapshot.data!;
-          _titleController.text = ticket.data["title"];
-          _contentController.text = ticket.data["content"];
-          return Scaffold(
-            body: Form(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextFormField(
-                      controller: _titleController,
-                    ),
-                    TextFormField(
-                      controller: _contentController,
-                    ),
-                    OutlinedButton(
-                        onPressed: () async {
-                          final Map<String, dynamic> body = {
-                            "title": _titleController.text,
-                            "content": _contentController.text
-                          };
-                          await context
-                              .read<PocketBase>()
-                              .collection('tickets')
-                              .update(ticket.id, body: body);
-
-                          if (context.mounted) {
-                            context.go('/tickets');
-                          }
-                        },
-                        child: const Text("Save")),
-                  ],
-                ),
-              ),
-            ),
-          );
-        } else if (snapshot.hasError) {
-          return Scaffold(
-              body: Center(
-            child: Text(snapshot.error.toString()),
-          ));
-        } else {
-          return const Scaffold(
-              body: Center(
-            child: CircularProgressIndicator(),
-          ));
-        }
-      },
     );
   }
 }
