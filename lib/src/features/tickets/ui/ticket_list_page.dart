@@ -14,7 +14,9 @@ class _TicketsListPageState extends State<TicketsListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: const Text("Tickets"),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           context.go('/tickets/create');

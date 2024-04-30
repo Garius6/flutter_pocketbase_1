@@ -84,7 +84,6 @@ class PocketBaseApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      themeMode: ThemeMode.dark,
       theme: ThemeData.from(
           colorScheme: MaterialTheme.lightScheme().toColorScheme()),
       darkTheme: ThemeData.from(
