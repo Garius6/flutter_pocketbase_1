@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_pocketbase_1/src/features/auth/view_model.dart';
 import 'package:flutter_pocketbase_1/src/features/tickets/domain.dart';
 import 'package:flutter_pocketbase_1/src/features/tickets/view_model.dart';
 import 'package:go_router/go_router.dart';
@@ -27,9 +28,9 @@ class _TicketCreatePageState extends State<TicketCreatePage> {
               ),
               OutlinedButton(
                   onPressed: () async {
-                    await context
-                        .read<TicketsViewModel>()
-                        .create(Ticket(content: _contentController.text));
+                    final userId = context.read<AuthViewModel>().user.id;
+                    await context.read<TicketsViewModel>().create(Ticket(
+                        content: _contentController.text, authorId: userId));
 
                     if (context.mounted) {
                       context.go('/tickets');
