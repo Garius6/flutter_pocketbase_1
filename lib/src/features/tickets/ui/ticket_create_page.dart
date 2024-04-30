@@ -12,7 +12,6 @@ class TicketCreatePage extends StatefulWidget {
 }
 
 class _TicketCreatePageState extends State<TicketCreatePage> {
-  final _titleController = TextEditingController();
   final _contentController = TextEditingController();
 
   @override
@@ -24,16 +23,13 @@ class _TicketCreatePageState extends State<TicketCreatePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               TextFormField(
-                controller: _titleController,
-              ),
-              TextFormField(
                 controller: _contentController,
               ),
               OutlinedButton(
                   onPressed: () async {
-                    await context.read<TicketsViewModel>().create(Ticket(
-                        title: _titleController.text,
-                        content: _contentController.text));
+                    await context
+                        .read<TicketsViewModel>()
+                        .create(Ticket(content: _contentController.text));
 
                     if (context.mounted) {
                       context.go('/tickets');

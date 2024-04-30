@@ -14,7 +14,6 @@ class TicketEditPage extends StatefulWidget {
 }
 
 class _TicketEditPageState extends State<TicketEditPage> {
-  final _titleController = TextEditingController();
   final _contentController = TextEditingController();
 
   late Future<Ticket> _ticketFuture;
@@ -34,7 +33,6 @@ class _TicketEditPageState extends State<TicketEditPage> {
   void dispose() {
     super.dispose();
 
-    _titleController.dispose();
     _contentController.dispose();
   }
 
@@ -45,7 +43,6 @@ class _TicketEditPageState extends State<TicketEditPage> {
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           final ticket = snapshot.data!;
-          _titleController.text = ticket.title;
           _contentController.text = ticket.content;
           return Scaffold(
             body: Form(
@@ -54,17 +51,12 @@ class _TicketEditPageState extends State<TicketEditPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     TextFormField(
-                      controller: _titleController,
-                    ),
-                    TextFormField(
                       controller: _contentController,
                     ),
                     OutlinedButton(
                         onPressed: () async {
-                          await context.read<TicketsViewModel>().update(
-                              ticket.copyWith(
-                                  title: _titleController.text,
-                                  content: _contentController.text));
+                          await context.read<TicketsViewModel>().update(ticket
+                              .copyWith(content: _contentController.text));
 
                           if (context.mounted) {
                             context.go('/tickets');

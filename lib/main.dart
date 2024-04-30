@@ -6,6 +6,7 @@ import 'package:flutter_pocketbase_1/src/features/tickets/ui/ticket_create_page.
 import 'package:flutter_pocketbase_1/src/features/tickets/ui/ticket_detail_page.dart';
 import 'package:flutter_pocketbase_1/src/features/tickets/ui/ticket_edit_page.dart';
 import 'package:flutter_pocketbase_1/src/features/tickets/ui/ticket_list_page.dart';
+import 'package:flutter_pocketbase_1/theme.dart';
 import 'package:flutter_pocketbase_1/widgets/credentials.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pocketbase/pocketbase.dart';
@@ -83,6 +84,11 @@ class PocketBaseApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
+      themeMode: ThemeMode.dark,
+      theme: ThemeData.from(
+          colorScheme: MaterialTheme.lightScheme().toColorScheme()),
+      darkTheme: ThemeData.from(
+          colorScheme: MaterialTheme.darkScheme().toColorScheme()),
       routerConfig: _router,
     );
   }

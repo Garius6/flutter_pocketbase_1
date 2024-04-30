@@ -46,7 +46,6 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                 body: Column(
                   children: [
                     Text(currentTicket.id!),
-                    Text(currentTicket.title),
                     Text(currentTicket.content),
                   ],
                 ));

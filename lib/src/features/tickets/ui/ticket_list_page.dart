@@ -14,6 +14,7 @@ class _TicketsListPageState extends State<TicketsListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           context.go('/tickets/create');
@@ -26,7 +27,7 @@ class _TicketsListPageState extends State<TicketsListPage> {
           final currentTicket =
               context.watch<TicketsViewModel>().tickets[index];
           return ListTile(
-            title: Text(currentTicket.title),
+            title: Text(currentTicket.id!),
             onTap: () {
               context.go('/tickets/${currentTicket.id}');
             },
