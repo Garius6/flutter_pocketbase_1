@@ -97,10 +97,8 @@ class PocketBaseApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      theme: ThemeData.from(
-          colorScheme: MaterialTheme.lightScheme().toColorScheme()),
-      darkTheme: ThemeData.from(
-          colorScheme: MaterialTheme.darkScheme().toColorScheme()),
+      theme: const MaterialTheme(TextTheme()).light(),
+      darkTheme: const MaterialTheme(TextTheme()).dark(),
       routerConfig: _router,
     );
   }

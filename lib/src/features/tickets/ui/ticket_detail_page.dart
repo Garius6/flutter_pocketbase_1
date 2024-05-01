@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_pocketbase_1/src/features/auth/view_model.dart';
 import 'package:flutter_pocketbase_1/src/features/tickets/domain.dart';
 import 'package:flutter_pocketbase_1/src/features/tickets/view_model.dart';
 import 'package:go_router/go_router.dart';
@@ -33,22 +34,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             final currentTicket = snapshot.data!;
-            return Scaffold(
-                appBar: AppBar(
-                  actions: [
-                    IconButton(
-                        onPressed: () {
-                          context.go('/tickets/${currentTicket.id}/edit');
-                        },
-                        icon: const Icon(Icons.edit))
-                  ],
-                ),
-                body: Column(
-                  children: [
-                    Text(currentTicket.id!),
-                    Text(currentTicket.content),
-                  ],
-                ));
+            return TicketDetails(currentTicket: currentTicket);
           } else if (snapshot.hasError) {
             return Center(
               child: Text(snapshot.error.toString()),
@@ -57,5 +43,38 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
             return const CircularProgressIndicator();
           }
         });
+  }
+}
+
+class TicketDetails extends StatelessWidget {
+  const TicketDetails({
+    super.key,
+    required this.currentTicket,
+  });
+
+  final Ticket currentTicket;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+          actions: [
+            IconButton(
+              onPressed: () {
+                context.go('/tickets/${currentTicket.id}/edit');
+              },
+              icon: const Icon(Icons.edit),
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            Text(currentTicket.id!),
+            Text(
+              currentTicket.content,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          ],
+        ));
   }
 }
